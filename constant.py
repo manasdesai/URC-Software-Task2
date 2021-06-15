@@ -1,45 +1,27 @@
 #!/usr/bin/env python
 import rospy
-from std_msgs.msg import Int64
-         
-def callback1(integer_inc):
+from std_msgs.msg import Int32
+import message_filters
 
-                       
-def callback2(integer_dec):
-                                
-                                       # In ROS, nodes are uniquely named. If two nodes with the same
-                                         # name are launched, the previous one is kicked off. The
-def constant():                                           # anonymous=True flag means that rospy will choose a unique
-                                             # name for our 'listener' node so that multiple listeners can
-                                               # run simultaneously.
-    rospy.init_node('constant', anonymous=True)
-    rospy.Subscriber("inc",Int64,callback1)
-    rospy.Subscriber("dec",Int64,callback2)
-                                             
-    rospy.spin()
-if __name__ == '__main__':
-    constant()
+rospy.init_node("constant")
 
-    
-def result():
+class constant:
+    def __init__(self):
+        self.constant = Int32()
+        self.subs_inc = rospy.Subscriber("/inc", Int32, self.callback_inc)
+        self.subs_dec = rospy.Subscriber("/dec", Int32, self.callback_dec)
+    def callback_inc(self, inc):
+        self.constant.data = inc.data
+        print("inc: ", self.constant)
+    def callback_dec(self, dec):
+        self.constant.data = self.constant.data + dec.data
+        print("inc+dec: ", self.constant)
 
-    rospy.init_node('result',anonymous=True)
-    
-    sum=integer_inc+integer_dec
-    
-    rate = rospy.Rate(1) # 1Hz
-    while not rospy.is_shutdown():
-        
-        rospy.loginfo(sum)                                        
-        pub.publish(sum)
-         
-        rate.sleep()
-    
-                                                         # spin() simply keeps python from exiting until this node is stopped
-    rospy.spin()
-                                                         
-if __name__ == '__main__':
-    try:
-        result()
-    except rospy.ROSInterruptException:
-        pass
+constant_obj = constant()
+publisher = rospy.Publisher("/const", Int32, queue_size=1)
+rate = rospy.Rate(1)
+
+while not rospy.is_shutdown():
+    publisher.publish(constant_obj.constant)
+    print("published data is: ", constant_obj.constant)
+    rate.sleep()
